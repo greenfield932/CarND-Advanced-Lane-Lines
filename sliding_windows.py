@@ -7,25 +7,31 @@ import matplotlib.pyplot as plt
 from camera import Camera
 from utilities import *
 
-def slidingWindowsFindRawPixelsIndexes(binary_warped, nwindows = 15, debug = False):
+def slidingWindowsFindRawPixelsIndexes(binary_warped, proposal_start_pos = None, nwindows = 15, debug = False):
 
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
     #histogram = np.sum(binary_warped[binary_warped.shape[0]//4:,:], axis=0)
-    histogram = np.sum(binary_warped[binary_warped.shape[0]//6:,:], axis=0)
-    #plt.plot(histogram)
-    #plt.show()
-    
-    #showScaled('slidingWindowsFindRawPixelsIndexes', binary_warped, 0.5)
+
     # Create an output image to draw on and  visualize the result
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
 
-    # Find the peak of the left and right halves of the histogram
-    # These will be the starting point for the left and right lines
-    midpoint = np.int(histogram.shape[0]/2)
-    leftx_base = np.argmax(histogram[:midpoint])
-    rightx_base = np.argmax(histogram[midpoint:]) + midpoint
+    if proposal_start_pos == None:
+        histogram = np.sum(binary_warped[binary_warped.shape[0]//6:,:], axis=0)
+        #plt.plot(histogram)
+        #plt.show()
 
+        #showScaled('slidingWindowsFindRawPixelsIndexes', binary_warped, 0.5)
+        
+        # Find the peak of the left and right halves of the histogram
+        # These will be the starting point for the left and right lines
+        midpoint = np.int(histogram.shape[0]/2)
+        leftx_base = np.argmax(histogram[:midpoint])
+        rightx_base = np.argmax(histogram[midpoint:]) + midpoint
+    else:
+        leftx_base = int(proposal_start_pos[0])
+        rightx_base = int(proposal_start_pos[1])
+        
     # Set height of windows
     window_height = np.int(binary_warped.shape[0]/nwindows)
     # Identify the x and y positions of all nonzero pixels in the image
@@ -82,6 +88,14 @@ def slidingWindowsFindRawPixelsIndexes(binary_warped, nwindows = 15, debug = Fal
     righty = nonzeroy[right_lane_inds] 
 
     if debug == True:
+        if proposal_start_pos != None:
+            print('Proposal:' + str(leftx_base)+' '+str(out_img.shape[0]-5))
+
+            cv2.circle(out_img, (int(proposal_start_pos[0]), int(out_img.shape[0]-5)), 3, (255,255,0), 3)
+            cv2.circle(out_img, (int(proposal_start_pos[1]), int(out_img.shape[0]-5)), 3, (0,255,255), 3)
+        
+        #print(left_fitx[-1])
+        #print(ploty[-1])
         showScaled('Sliding windows', out_img, 0.5)
     return left_lane_inds, right_lane_inds
 
@@ -96,6 +110,8 @@ def drawLine(img, ptsx, ptsy, color, thick = 2):
 
 def fitCurves(binary_warped, left_lane_inds, right_lane_inds, debug = False):
 
+    if len(left_lane_inds)==0 or len(right_lane_inds) == 0:
+        return [],[],[],[],[]
     nonzero = binary_warped.nonzero()
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
@@ -131,9 +147,15 @@ def fitCurves(binary_warped, left_lane_inds, right_lane_inds, debug = False):
         # Draw the lane onto the warped blank image
         cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
         cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
+        
         result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
         drawLine(result, left_fitx, ploty, (0,255,255))
         drawLine(result, right_fitx, ploty, (0,255,255))
+        
+        #cv2.circle(result, (int(left_fitx[-1]), int(ploty[-1])), 3, (255,255,0), 2)
+        #print(left_fitx[-1])
+        #print(ploty[-1])
+        
         showScaled('Fitting curves', result, 0.5)
         #plt.imshow(out_img)
         #plt.plot(left_fitx, ploty, color='yellow')
@@ -142,7 +164,7 @@ def fitCurves(binary_warped, left_lane_inds, right_lane_inds, debug = False):
         #plt.ylim(720, 0)
         #plt.show()
 
-    return left_fitx, right_fitx, ploty
+    return left_fitx, right_fitx, ploty, left_fit, right_fit
 
 def calcCurvature(left_fitx, right_fitx):
 

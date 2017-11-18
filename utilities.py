@@ -7,6 +7,18 @@ import matplotlib.pyplot as plt
 from camera import Camera
 from skimage import exposure
 
+
+def getFrame(filename, frameStart):
+    cap = cv2.VideoCapture(filename)
+    frameCnt = 0
+
+    while(cap.isOpened() and frameCnt < frameStart):
+        ret, frame = cap.read()
+        frameCnt+=1
+
+    return frame
+
+
 def drawColorSpace(img, names, spaceFromTo = None):
     if spaceFromTo == None:
         channels = img.astype(np.float)
@@ -80,12 +92,10 @@ def equalize(img):
 
 def colorPipeline(img, s_thresh=(100, 250), sx_thresh=(20, 100), debug = False):
     img = np.copy(img)
-    imgEqualized = refineImage(img)
-    
-    #showScaled('Refined image', img, 0.5)
-    #return img
-    colorMask = colorTrash(imgEqualized)
+    #imgEqualized = refineImage(img)
+    #colorMask = colorTrash(imgEqualized)
     # Convert to HLS color space and separate the V channel
+    
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
     l_channel = hls[:,:,1]
     s_channel = hls[:,:,2]
@@ -108,8 +118,8 @@ def colorPipeline(img, s_thresh=(100, 250), sx_thresh=(20, 100), debug = False):
     s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
     
     combined_binary = np.zeros_like(sxbinary)
-    #combined_binary[(s_binary == 1) & (sxbinary == 1)] = 255
-    combined_binary[(colorMask == 1) & (sxbinary == 1)] = 1
+    combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
+    #combined_binary[(colorMask == 1) & (sxbinary == 1)] = 1
     
     #trashMask = colorTrash(img)
     #combined_binary[(sxbinary == 1) | (trashMask == 1)] = 255
@@ -117,11 +127,11 @@ def colorPipeline(img, s_thresh=(100, 250), sx_thresh=(20, 100), debug = False):
     #img = refineImage(warped)
     #img = colorTrash(img)
 
-    if debug == True:
+    #if debug == True:
         # Stack each channel
         # Note color_binary[:, :, 0] is all 0s, effectively an all black image. It might
         # be beneficial to replace this channel with something else.
-        color_binary = np.dstack(( np.zeros_like(sxbinary), sxbinary, colorMask)) * 255
+        #color_binary = np.dstack(( np.zeros_like(sxbinary), sxbinary, colorMask)) * 255
         #color_binary = np.dstack(( np.zeros_like(sxbinary), np.zeros_like(sxbinary), s_binary))* 255
         #color_binary1 = np.dstack(( np.zeros_like(sxbinary), np.zeros_like(sxbinary), h_channel))/255
         #color_binary2 = np.dstack(( np.zeros_like(sxbinary), np.zeros_like(sxbinary), s_channel))/255
@@ -132,8 +142,8 @@ def colorPipeline(img, s_thresh=(100, 250), sx_thresh=(20, 100), debug = False):
         #
         #print(color_binary)
         #showScaled('Color pipe line #0', img, 0.5)
-        showScaled('Color pipe line #1', color_binary, 0.5)
-        showScaled('Color pipe line #2', combined_binary*255, 0.5)
+        #showScaled('Color pipe line #1', color_binary, 0.5)
+        #showScaled('Color pipe line #2', combined_binary*255, 0.5)
 
     return combined_binary
 
