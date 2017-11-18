@@ -6,57 +6,25 @@ from moviepy.editor import VideoFileClip
 import matplotlib.pyplot as plt
 from camera import Camera
 from utilities import *
-from sliding_windows import *
-#Here links for codes used to create this project
 
-#Camera calibration
-#http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html
+def slidingWindowsFindRawPixelsIndexes(binary_warped, nwindows = 9, debug = False):
 
-#Read/write opencv calibration matrix
-#https://stackoverflow.com/questions/44056880/how-to-read-write-a-matrix-from-a-persistent-xml-yaml-file-in-opencv-3-with-pyth
-
-def usage():
-    print("Usage: pipeline.py video.mp4") 
-
-class Line():
-    def __init__(self):
-        # was the line detected in the last iteration?
-        self.detected = False  
-        # x values of the last n fits of the line
-        self.recent_xfitted = [] 
-        #average x values of the fitted line over the last n iterations
-        self.bestx = None     
-        #polynomial coefficients averaged over the last n iterations
-        self.best_fit = None  
-        #polynomial coefficients for the most recent fit
-        self.current_fit = [np.array([False])]  
-        #radius of curvature of the line in some units
-        self.radius_of_curvature = None 
-        #distance in meters of vehicle center from the line
-        self.line_base_pos = None 
-        #difference in fit coefficients between last and new fits
-        self.diffs = np.array([0,0,0], dtype='float') 
-        #x values for detected line pixels
-        self.allx = None  
-        #y values for detected line pixels
-        self.ally = None
-      
-
-def windows(binary_warped, img_orig_undist, Minv):
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
-    
+    #histogram = np.sum(binary_warped[binary_warped.shape[0]//4:,:], axis=0)
+    #plt.plot(histogram)
+    #plt.show()
     histogram = np.sum(binary_warped[binary_warped.shape[0]//2:,:], axis=0)
+    
     # Create an output image to draw on and  visualize the result
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+
     # Find the peak of the left and right halves of the histogram
     # These will be the starting point for the left and right lines
     midpoint = np.int(histogram.shape[0]/2)
     leftx_base = np.argmax(histogram[:midpoint])
     rightx_base = np.argmax(histogram[midpoint:]) + midpoint
 
-    # Choose the number of sliding windows
-    nwindows = 9
     # Set height of windows
     window_height = np.int(binary_warped.shape[0]/nwindows)
     # Identify the x and y positions of all nonzero pixels in the image
@@ -112,24 +80,44 @@ def windows(binary_warped, img_orig_undist, Minv):
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds] 
 
+    if debug == True:
+        showScaled('Sliding windows', out_img, 0.5)
+    return left_lane_inds, right_lane_inds
+
+def fitCurves(binary_warped, left_lane_inds, right_lane_inds, debug = False):
+
+    nonzero = binary_warped.nonzero()
+    nonzeroy = np.array(nonzero[0])
+    nonzerox = np.array(nonzero[1])
+    leftx = nonzerox[left_lane_inds]
+    lefty = nonzeroy[left_lane_inds] 
+    rightx = nonzerox[right_lane_inds]
+    righty = nonzeroy[right_lane_inds] 
+
     # Fit a second order polynomial to each
     left_fit = np.polyfit(lefty, leftx, 2)
     right_fit = np.polyfit(righty, rightx, 2)
     
-    #showAndExit(out_img)
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
 
-    out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-    out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
-    #plt.imshow(out_img)
-    #plt.plot(left_fitx, ploty, color='yellow')
-    #plt.plot(right_fitx, ploty, color='yellow')
-    #plt.xlim(0, 1280)
-    #plt.ylim(720, 0)
-    #plt.show()
-    #return
+    if debug == True:
+        out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+        out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+        out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
+        showScaled('Fitting curves', out_img, 0.5)
+        #plt.imshow(out_img)
+        #plt.plot(left_fitx, ploty, color='yellow')
+        #plt.plot(right_fitx, ploty, color='yellow')
+        #plt.xlim(0, 1280)
+        #plt.ylim(720, 0)
+        #plt.show()
+
+    return left_fitx, right_fitx, ploty
+
+def calcCurvature(left_fitx, right_fitx):
+
     # Define conversions in x and y from pixels space to meters
     ym_per_pix = 30/720 # meters per pixel in y dimension
     xm_per_pix = 3.7/700 # meters per pixel in x dimension
@@ -140,17 +128,22 @@ def windows(binary_warped, img_orig_undist, Minv):
     y_eval = np.max(ploty)
     left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
     right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
-    print(left_curverad, right_curverad)
+    #print(left_curverad, right_curverad)
 
     left_fit_cr = np.polyfit(ploty*ym_per_pix, leftx*xm_per_pix, 2)
     right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
+    
     # Calculate the new radii of curvature
     left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
     right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+    
     # Now our radius of curvature is in meters
-    print(left_curverad, 'm', right_curverad, 'm')
+    #print(left_curverad, 'm', right_curverad, 'm')
     # Example values: 632.1 m    626.2 m
 
+    return left_curverad, right_curverad
+
+def drawCurves(binary_warped, img_orig_undist, left_fitx, right_fitx, ploty, Minv):
     warped = binary_warped
     warp_zero = np.zeros_like(warped).astype(np.uint8)
     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
@@ -165,135 +158,10 @@ def windows(binary_warped, img_orig_undist, Minv):
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
     newwarp = cv2.warpPerspective(color_warp, Minv, (img_orig_undist.shape[1], img_orig_undist.shape[0])) 
+    #showScaled('unwarp', newwarp)
     # Combine the result with the original image
     result = cv2.addWeighted(img_orig_undist, 1, newwarp, 0.3, 0)
     #plt.imshow(result)
     #plt.show()
     #showAndExit(result)
     return result
-
-
-def pipeline(img_orig, cam, debug = False):
-
-    img_orig_undist = cam.undistort(img_orig)
-    img = colorPipeline(img_orig_undist, debug = debug)
-    #return img
-    #return img_orig_undist
-    imshape = img.shape
-    xsize = imshape[1]
-    ysize = imshape[0]
-    left_bottom = (130, ysize-50)
-    left_top = (550, 470)
-    right_top = (740, 470)
-    right_bottom = (1180, ysize-50)
-
-    region_lines = [[(left_bottom[0], left_bottom[1], left_top[0], left_top[1])],
-                        [(left_top[0], left_top[1], right_top[0], right_top[1])],
-                        [(right_top[0], right_top[1], right_bottom[0], right_bottom[1])],
-                        [(right_bottom[0], right_bottom[1], left_bottom[0], left_bottom[1])]]
-
-    if debug == True:
-        img2 = img_orig.copy()
-        draw_lines_orig(img2, region_lines, [255,0,0], 3)
-        showScaled('ROI', img2)
-
-    src  = np.float32([
-        [left_bottom[0], left_bottom[1]],
-        [left_top[0], left_top[1]],
-        [right_top[0], right_top[1]],
-        [right_bottom[0], right_bottom[1]]
-    ])
-
-    dst  = np.float32([
-        [0, ysize-1],
-        [0,0],
-        [xsize-1, 0],
-        [xsize-1, ysize-1]
-    ])
-    
-    warped, M, Minv = warp(img, src, dst, (xsize,ysize), debug = False)
-    
-    #res = windows(warped, img_orig_undist, Minv)
-    left_lane_inds, right_lane_inds = slidingWindowsFindRawPixelsIndexes(warped, debug = debug)
-    left_fitx, right_fitx, ploty = fitCurves(warped, left_lane_inds, right_lane_inds,  debug = debug)
-    result = drawCurves(warped, img_orig_undist, left_fitx, right_fitx, ploty, Minv)
-    return result
-
-cam = Camera()
-if cam.calibrationFileExists() == False or cam.load() == False:
-    if cam.calibrate() == False:
-        print("Fail to calibrate camera")
-        sys.exit(1)
-        
-    cam.save()
-
-def getFrame(filename, frameStart):
-    cap = cv2.VideoCapture(filename)
-    frameCnt = 0
-
-    while(cap.isOpened() and frameCnt < frameStart):
-        ret, frame = cap.read()
-        frameCnt+=1
-
-    return frame
-    
-videoMode = False
-debug = True
-frameStart = 1048
-#frameStart = 0
-oneFrame = True
-if videoMode == False:
-    #warptest(cam)
-    #cv2.imshow('frame', img)
-
-    #Exit on esc
-    #if cv2.waitKey(0) == 27:
-    #    cv2.destroyAllWindows()
-    #sys.exit(0)
-    #img_orig = cv2.imread('test_images/straight_lines1.jpg')     
-    img_orig  = getFrame(sys.argv[1], 1048)
-    #img_orig = cv2.imread('test_images/test6.jpg')     
-    img = pipeline(img_orig, cam, debug)
-    showAndExit(img)
-    #Exit on esc
-    #if cv2.waitKey(0) == 27:
-    #    cv2.destroyAllWindows()
-
-else:
-
-    if len(sys.argv) < 2:
-        usage()
-        sys.exit(1)
-
-    videoFileName = sys.argv[1]
-    cap = cv2.VideoCapture(videoFileName)
-
-    if cap.isOpened() == False:
-        print("Error opening video file:" + videoFileName)
-        sys.exit(2)
-
-    frameCnt = 0
-
-    while(cap.isOpened() and frameCnt < frameStart):
-        ret, frame = cap.read()
-        frameCnt+=1
-
-    while(cap.isOpened()):
-        if cv2.waitKey(25) == 27:
-            break
-
-        #if oneFrame == True and cv2.waitKey(25) == ord('a'):
-        ret, frame = cap.read()
-        if ret == True: 
-            frame = pipeline(frame, cam, debug)
-            cv2.putText(frame, 'Frame: '+str(frameCnt), (20,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1, cv2.LINE_AA)
-            cv2.imshow('Frame',frame)
-        else: 
-            break
-        frameCnt+=1
-
-        if oneFrame == True and cv2.waitKey(0) == ord('a'):
-            continue
-
-    cap.release() 
-    cv2.destroyAllWindows()
