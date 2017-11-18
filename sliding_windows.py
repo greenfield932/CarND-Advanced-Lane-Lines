@@ -7,15 +7,16 @@ import matplotlib.pyplot as plt
 from camera import Camera
 from utilities import *
 
-def slidingWindowsFindRawPixelsIndexes(binary_warped, nwindows = 9, debug = False):
+def slidingWindowsFindRawPixelsIndexes(binary_warped, nwindows = 15, debug = False):
 
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
     #histogram = np.sum(binary_warped[binary_warped.shape[0]//4:,:], axis=0)
+    histogram = np.sum(binary_warped[binary_warped.shape[0]//6:,:], axis=0)
     #plt.plot(histogram)
     #plt.show()
-    histogram = np.sum(binary_warped[binary_warped.shape[0]//2:,:], axis=0)
     
+    #showScaled('slidingWindowsFindRawPixelsIndexes', binary_warped, 0.5)
     # Create an output image to draw on and  visualize the result
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
 
@@ -84,6 +85,15 @@ def slidingWindowsFindRawPixelsIndexes(binary_warped, nwindows = 9, debug = Fals
         showScaled('Sliding windows', out_img, 0.5)
     return left_lane_inds, right_lane_inds
 
+def drawLine(img, ptsx, ptsy, color, thick = 2):
+    for i in range(1, len(ptsy)):
+        x1 = int(ptsx[i-1])
+        x2 = int(ptsx[i])
+        y1 = int(ptsy[i-1])
+        y2 = int(ptsy[i])
+        cv2.line(img, (x1, y1), (x2, y2), color, thick)
+        cv2.line(img, (x1, y1), (x2, y2), color, thick)
+
 def fitCurves(binary_warped, left_lane_inds, right_lane_inds, debug = False):
 
     nonzero = binary_warped.nonzero()
@@ -102,11 +112,29 @@ def fitCurves(binary_warped, left_lane_inds, right_lane_inds, debug = False):
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
 
+    margin = 100
     if debug == True:
         out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
         out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
         out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
-        showScaled('Fitting curves', out_img, 0.5)
+        
+        window_img = np.zeros_like(out_img)
+        left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-margin, ploty]))])
+        left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+margin, 
+                              ploty])))])
+        left_line_pts = np.hstack((left_line_window1, left_line_window2))
+        right_line_window1 = np.array([np.transpose(np.vstack([right_fitx-margin, ploty]))])
+        right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx+margin, 
+                              ploty])))])
+        right_line_pts = np.hstack((right_line_window1, right_line_window2))
+
+        # Draw the lane onto the warped blank image
+        cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
+        cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
+        result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
+        drawLine(result, left_fitx, ploty, (0,255,255))
+        drawLine(result, right_fitx, ploty, (0,255,255))
+        showScaled('Fitting curves', result, 0.5)
         #plt.imshow(out_img)
         #plt.plot(left_fitx, ploty, color='yellow')
         #plt.plot(right_fitx, ploty, color='yellow')
@@ -143,7 +171,7 @@ def calcCurvature(left_fitx, right_fitx):
 
     return left_curverad, right_curverad
 
-def drawCurves(binary_warped, img_orig_undist, left_fitx, right_fitx, ploty, Minv):
+def drawTargetLane(binary_warped, img_orig_undist, left_fitx, right_fitx, ploty, Minv):
     warped = binary_warped
     warp_zero = np.zeros_like(warped).astype(np.uint8)
     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))

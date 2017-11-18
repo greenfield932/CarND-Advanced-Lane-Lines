@@ -176,16 +176,32 @@ def windows(binary_warped, img_orig_undist, Minv):
 def pipeline(img_orig, cam, debug = False):
 
     img_orig_undist = cam.undistort(img_orig)
-    img = colorPipeline(img_orig_undist, debug = debug)
-    #return img
+    #img = colorPipeline(img_orig_undist, debug = debug)
+    #img = refineImage(img_orig)
+    #img = colorTrash(img)
+    img = img_orig_undist
+    #showScaled('yellow', img)
+    #return img_orig
     #return img_orig_undist
     imshape = img.shape
     xsize = imshape[1]
     ysize = imshape[0]
+    
     left_bottom = (130, ysize-50)
     left_top = (550, 470)
-    right_top = (740, 470)
+    right_top = (760, 470)
     right_bottom = (1180, ysize-50)
+
+    #left_bottom = (140, ysize-50)
+    #left_top = (350, 570)
+    #right_top = (900, 570)
+    #right_bottom = (1080, ysize-50)
+
+    #basler
+    #left_bottom = (80, ysize-400)
+    #left_top = (500, 330)
+    #right_top = (640,330)
+    #right_bottom = (1300, ysize-400)
 
     region_lines = [[(left_bottom[0], left_bottom[1], left_top[0], left_top[1])],
                         [(left_top[0], left_top[1], right_top[0], right_top[1])],
@@ -210,14 +226,19 @@ def pipeline(img_orig, cam, debug = False):
         [xsize-1, 0],
         [xsize-1, ysize-1]
     ])
-    
+    w = right_bottom[0] - left_bottom[0]
+    h = left_bottom[1] - left_top[1]
     warped, M, Minv = warp(img, src, dst, (xsize,ysize), debug = False)
-    
+    #img = cv2.resize(warped, (int(w/2), int(h/2)), cv2.INTER_CUBIC)
+    warped = colorPipeline(warped, debug = debug)
+    #return img
     #res = windows(warped, img_orig_undist, Minv)
     left_lane_inds, right_lane_inds = slidingWindowsFindRawPixelsIndexes(warped, debug = debug)
-    left_fitx, right_fitx, ploty = fitCurves(warped, left_lane_inds, right_lane_inds,  debug = debug)
-    result = drawCurves(warped, img_orig_undist, left_fitx, right_fitx, ploty, Minv)
-    return result
+    if len(left_lane_inds)>0 and len(right_lane_inds) > 0 :
+        left_fitx, right_fitx, ploty = fitCurves(warped, left_lane_inds, right_lane_inds,  debug = debug)
+        result = drawTargetLane(warped, img_orig_undist, left_fitx, right_fitx, ploty, Minv)
+        return result
+    return img_orig_undist
 
 cam = Camera()
 if cam.calibrationFileExists() == False or cam.load() == False:
@@ -237,10 +258,10 @@ def getFrame(filename, frameStart):
 
     return frame
     
-videoMode = False
+videoMode = True
 debug = True
-frameStart = 1048
-#frameStart = 0
+#frameStart = 1048
+frameStart = 700
 oneFrame = True
 if videoMode == False:
     #warptest(cam)
@@ -251,7 +272,9 @@ if videoMode == False:
     #    cv2.destroyAllWindows()
     #sys.exit(0)
     #img_orig = cv2.imread('test_images/straight_lines1.jpg')     
-    img_orig  = getFrame(sys.argv[1], 1048)
+    img_orig  = getFrame(sys.argv[1], 547)
+    
+    
     #img_orig = cv2.imread('test_images/test6.jpg')     
     img = pipeline(img_orig, cam, debug)
     showAndExit(img)
@@ -284,6 +307,7 @@ else:
 
         #if oneFrame == True and cv2.waitKey(25) == ord('a'):
         ret, frame = cap.read()
+        #frame = cv2.flip(frame, 0)
         if ret == True: 
             frame = pipeline(frame, cam, debug)
             cv2.putText(frame, 'Frame: '+str(frameCnt), (20,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1, cv2.LINE_AA)
