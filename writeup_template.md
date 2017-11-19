@@ -161,7 +161,7 @@ harder_challenge video [link to harder video result](./examples/out_harder_chall
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-The pipeline is quite stable on project video, but sometimes fails on challenge  [link to challenge video result](./examples/out_challenge_video.avi) and harder_challenge videos  [link to harder video result](./examples/out_harder_challenge_video.avi).
+The pipeline is quite stable on project video, but sometimes fails on challenge video and mich often failes on harder_challenge video.
 
 One of the problems I faced were false positives on stright lines on the road (a joint of a road coverages) appear in gradient filter very actively, as result some of them can be interpreted as lane line. This problem was fixed by using other color treshold methods based on white/yellow color extraction with gradient filter combination in 'AND' manner (instead of 'OR
 ). I tried this approach on challenge_video and got much better results than using saturation channel treshold and luminosity gradient approach.
