@@ -118,15 +118,15 @@ The code for this procedure is located at the function `slidingWindowsFindRawPix
 
 The code mostly kept as is provided by Udacity. The algorithm is based one the following steps:
 
-## 1. Find peaks on the bottom of the image to detect start of lane lines
+#### 1) Find peaks on the bottom of the image to detect start of lane lines
 
 ![alt text][image8]
 
-## 2. Based on peaks start search for pixels by sliding windows stacked from bottom to top along the white pixels
+#### 2) Based on peaks start search for pixels by sliding windows stacked from bottom to top along the white pixels
 
 ![alt text][image9]
 
-## 3. Fit polynomial on the detected points to represent line as 3-coefficient parameters array for equation.
+#### 3) Fit polynomial on the detected points to represent line as 3-coefficient parameters array for equation.
 
 ![alt text][image10]
 
