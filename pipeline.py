@@ -174,6 +174,7 @@ else: #use video for processing
         #frame = cv2.flip(frame, 0)
 
         if ret == True: 
+
             if videoWriter == None and len(sys.argv) >= 3:
                 fourcc = cv2.VideoWriter_fourcc('H', '2', '6', '4')
                 videoWriter = cv2.VideoWriter(sys.argv[2], fourcc, fps,(frame.shape[1], frame.shape[0]),True)
