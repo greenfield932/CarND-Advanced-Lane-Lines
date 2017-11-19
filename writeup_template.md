@@ -66,9 +66,14 @@ The resulted undistorted image provided below:
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines #89 through #124 in `utilities.py`).  Here's an example of output for this step (red color data obtained from color treshold and green color - data obtained from gradient tresholds).
 
-![alt text][image3]
+![alt text][image4]
+
+Resulted binary mask looks like this:
+
+![alt text][image5]
+
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 

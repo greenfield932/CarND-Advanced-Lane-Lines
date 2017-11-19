@@ -80,7 +80,7 @@ def equalize(img):
 
 #main color pipeline
 def colorPipeline(img, s_thresh=(50, 250), sx_thresh=(30, 100), debug = False):
-    img = np.copy(img)
+    #img = np.copy(img)
 
     #imgEqualized = refineImage(img)
     #colorMask = colorTreshold(imgEqualized)
