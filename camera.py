@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 #Camera calibration
 #http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html
 
+#class for camera distortion correction
 class Camera():
     def __init__(self):
         print("Camera init")

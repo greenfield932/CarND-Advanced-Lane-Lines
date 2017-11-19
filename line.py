@@ -9,6 +9,7 @@ from utilities import *
 from sliding_windows import *
 from collections import deque
 
+#Class that represents a lane line and it's parameters
 class Line():
     def __init__(self):
         # was the line detected in the last iteration?
@@ -42,7 +43,6 @@ class Line():
         if self.needReset() == False and self.bestx!=None and len(self.bestx) > 0:
             return True
         return False
-
  
     def reset(self):
         self.detected = False  
@@ -56,7 +56,7 @@ class Line():
         self.allx = None
         self.ally = None
         self.lastSuccess = 0
-        
+
     def hasFit(self):
         if self.current_fit == None or len(self.current_fit) == 0:
             return False
@@ -91,14 +91,14 @@ class Line():
             print('Confidence fail: maxdiff '+str(max_diff)) 
             return False
         return True
-    
+
     def calcConfidence(self, fit):
         if len(fit) == 0:
             return False
         
         if self.current_fit == None:
             return True
-        
+
         a0 = np.fabs(self.current_fit[0])
         a1 = np.fabs(fit[0])
         a_confidence = np.maximum(a0, a1)/np.minimum(a0, a1)
@@ -114,18 +114,18 @@ class Line():
         
         if b_confidence > 100:
             return False
-        
+
         c0 = np.abs(self.current_fit[2])
         c1 = np.abs(fit[2])
-        
+
         c_confidence = np.abs(c1 - c0)/np.maximum(c0, c1)*100
         print('c conf: '+str(c_confidence))
         
         if c_confidence > 100:
             return False
-        
+
         return True
-        
+
     def setFrameBroken(self):
         self.lastSuccess+=1
         
@@ -155,7 +155,7 @@ class Line():
         self.best_fit = np.average(self.recent_fitted, axis=0)
         
         self.current_fit = fit
-    
+
     def sanityCheck(self, fit_x, fit):
         if len(fit_x) == 0 or len(fit) == 0:
             return False

@@ -10,6 +10,7 @@ from sliding_windows import *
 from collections import deque
 from line import Line
 
+#class that represents a path based on lane lines
 class Path():
     def __init__(self):
         self.left_line = Line()
@@ -90,8 +91,7 @@ class Path():
         left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
         right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
         startWidth = np.abs(left_fitx[self.size[1]-1] -right_fitx[self.size[1]-1])
-        
-        
+
         # remove all values that outside of analysis window
         left_fitx[(left_fitx < 0) | (left_fitx >= self.size[0])|(right_fitx < 0) | (right_fitx >= self.size[0])] = 0
         right_fitx[(left_fitx < 0) | (left_fitx >= self.size[0])|(right_fitx < 0) | (right_fitx >= self.size[0])] = startWidth

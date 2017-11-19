@@ -10,6 +10,7 @@ from sliding_windows import *
 from line import Line
 from path import Path
 
+#test distortion
 def output_calibration(cam):
     filename = 'camera_cal/calibration1.jpg'
     img = cv2.imread(filename)
@@ -20,7 +21,7 @@ def output_calibration(cam):
     showScaled('undistorted', img, 0.5)
     #cv2.imwrite('examples/calibration_2.jpg', img)
 
-    
+#test warp transformation
 def warptest(cam):
     img = cv2.imread('camera_cal/calibration8.jpg')     
     img = cam.undistort(img)
