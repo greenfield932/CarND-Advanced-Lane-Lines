@@ -53,19 +53,16 @@ class Path():
         start_y += step_y
         shift = self.calcCenterShift()
         cv2.putText(frame, 'Shift from center: {:.2} m'.format(shift), (start_x,start_y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,255,255), 2, cv2.LINE_AA)
-        
-        
+
     def hasConfidentData(self):
         res = self.left_line.hasConfidentData() and self.right_line.hasConfidentData()
         print('Path confident data:'+str(res))
         return res
-    
-    def addFrameData(self, left_fitx, right_fitx, left_fit, right_fit, ploty):
 
+    def addFrameData(self, left_fitx, right_fitx, left_fit, right_fit, ploty):
         left_conf = self.left_line.calcConfidence2(left_fit)
         right_conf = self.right_line.calcConfidence2(right_fit)
-        #print('Left confidence:'+str(left_conf))
-        #print('Right confidence:'+str(right_conf))
+
         if left_conf and right_conf:
             path_confidence = self.checkPathWidth(left_fit, right_fit)
             if path_confidence == True:
@@ -83,18 +80,13 @@ class Path():
         self.size = size
         self.left_line.size = size
         self.right_line.size = size
-        #print('SetSize:'+str(size))
-        
+
     def checkPathWidth(self, left_fit, right_fit):
-        #if self.left_line.hasPoints() == False or self.left_line.hasFit() == False:
-        #    return False
-        #if self.right_line.hasPoints() == False  or self.right_line.hasFit() == False:
-        #    return False
         if left_fit == None or len(left_fit) == 0 or right_fit == None or len(right_fit) == 0:
             return False
-        
+
         ploty = np.linspace(0, self.size[1]-1, self.size[1])
-    
+
         left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
         right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
         startWidth = np.abs(left_fitx[self.size[1]-1] -right_fitx[self.size[1]-1])
@@ -108,28 +100,18 @@ class Path():
         minWidth = np.amin(allWidths)
         maxWidth = np.amax(allWidths)
 
-        #print('Start width:' + str(startWidth))
-        #print('Min width:' + str(minWidth))
-        #print('Max width:' + str(maxWidth))
-        
         if minWidth < startWidth/3:
             #print('Min width confidence fail')
             print('Confidence fail: minWidth<startWidth/3 '+str(minWidth)+' '+str(startWidth/3) )
-        
             return False
         
         if maxWidth > startWidth*1.2:
             #print('Min width confidence fail')
             print('Confidence fail: maxWidth>startWidth/3 '+str(maxWidth)+' '+str(startWidth*1.2) )
-        
             return False
         
         if startWidth < 700:
             print('Confidence fail: startWidth<700'+str(startWidth)) 
-        
             return False
-        #if maxWidth > startWidth/3:
-        #    print('Max width confidence fail')
-        #    return False
-        #print('Confidence ok')
+
         return True

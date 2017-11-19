@@ -24,7 +24,7 @@ def drawColorSpace(img, names, spaceFromTo = None):
         channels = img.astype(np.float)
     else:
         channels = cv2.cvtColor(img, spaceFromTo).astype(np.float)
-    
+
     channel0 = channels[:,:,0]
     channel1 = channels[:,:,1]
     channel2 = channels[:,:,2]
@@ -38,28 +38,17 @@ def drawColorSpace(img, names, spaceFromTo = None):
     showScaled(names[2], color2, 0.5)
 
 def refineImage(img):
-    #https://stackoverflow.com/questions/24341114/simple-illumination-correction-in-images-opencv-c
+    #original code https://stackoverflow.com/questions/24341114/simple-illumination-correction-in-images-opencv-c
     lab= cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-    #cv2.imshow("lab",lab)
-
     #-----Splitting the LAB image to different channels-------------------------
     l, a, b = cv2.split(lab)
-    #cv2.imshow('l_channel', l)
-    #cv2.imshow('a_channel', a)
-    #cv2.imshow('b_channel', b)
-
     #-----Applying CLAHE to L-channel-------------------------------------------
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
     cl = clahe.apply(l)
-    #cv2.imshow('CLAHE output', cl)
-
     #-----Merge the CLAHE enhanced L-channel with the a and b channel-----------
     limg = cv2.merge((cl,a,b))
-    #cv2.imshow('limg', limg)
-
     #-----Converting image from LAB Color model to RGB model--------------------
     img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-    
     return img
     
 def colorTrash(img):
@@ -67,22 +56,18 @@ def colorTrash(img):
     lower_yellow = np.array([50,80,150])
     upper_yellow = np.array([255,255,255])
     mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
-    
+
     lower_white = np.array([200,200,200])
     upper_white = np.array([255,255,255])
     mask_white = cv2.inRange(img, lower_white, upper_white)
-    #res = cv2.bitwise_and(img, img, mask = mask_yellow | mask_white)
-    #cv2.bitwise_and(img, img, mask = mask_yellow | mask_white)
-    
+
     img = cv2.bitwise_and(img, img, mask = mask_yellow | mask_white)
     showScaled('color trash', img, 0.5)
-    
-    
+
     mask_res = np.zeros_like(mask_white)
     mask = mask_yellow | mask_white
     mask[(mask == 255)] = 1
-    
-    #print(mask)
+
     return mask
 
 def equalize(img):
@@ -92,7 +77,7 @@ def equalize(img):
 
 def colorPipeline(img, s_thresh=(50, 250), sx_thresh=(30, 100), debug = False):
     img = np.copy(img)
-    
+
     #imgEqualized = refineImage(img)
     #colorMask = colorTrash(imgEqualized)
     # Convert to HLS color space and separate the V channel
@@ -142,9 +127,9 @@ def colorPipeline(img, s_thresh=(50, 250), sx_thresh=(30, 100), debug = False):
         #showScaled('V', img, 0.5)
         #
         #print(color_binary)
-        #showScaled('Color pipe line #0', img, 0.5)
+        showScaled('Color pipe line #0', img, 0.5)
         showScaled('Color pipe line #1', color_binary, 0.5)
-        #showScaled('Color pipe line #2', combined_binary*255, 0.5)
+        showScaled('Color pipe line #2', combined_binary*255, 0.5)
 
     return combined_binary
 
@@ -152,11 +137,11 @@ def warp(img, src, dst, size, debug = False):
     M = cv2.getPerspectiveTransform(src, dst)
     Minv = cv2.getPerspectiveTransform(dst, src)
     warped = cv2.warpPerspective(img, M, size)
-    if debug == True:
-        showScaled('Bird eye view', warped, 0.5)
+    #if debug == True:
+    #    showScaled('Bird eye view', warped, 0.5)
     return warped, M, Minv
 
-def showScaled(name, img, scale = None, save = False):
+def showScaled(name, img, scale = None, save = True):
     cv2.namedWindow(name, cv2.WINDOW_NORMAL)
     cv2.imshow(name, img)
     if scale!=None:
@@ -213,43 +198,3 @@ def region_of_interest(img, vertices):
     #returning the image only where mask pixels are nonzero
     masked_image = cv2.bitwise_and(img, mask)
     return masked_image
-
-def warptest(cam):
-    img = cv2.imread('camera_cal/calibration8.jpg')     
-    img = cam.undistort(img)
-    #cv2.imwrite('examples/undistorted_example1.jpg', result)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    nx = 9
-    ny = 6
-    ret, corners = cv2.findChessboardCorners(gray, (nx, ny), None)
-    #cv2.drawChessboardCorners(img, (nx, ny), corners, ret)
-
-    src  = np.float32([
-        corners[0][0],
-        corners[nx-1][0],
-        corners[nx*ny-1][0],
-        corners[nx*ny-nx][0],    
-    ])
-    for i in range(0,4):
-        if i==2:
-            cv2.circle(img, (src[i][0],src[i][1]), 5, (255,0,0), 3)
-    imshape = img.shape
-    xsize = imshape[1]
-    ysize = imshape[0]
-
-    dst  = np.float32([
-        [5,5],
-        [xsize-5,5],
-        [xsize-5, ysize-5],
-        [5, ysize-5]
-    ])
-    for i in range(0,4):
-        cv2.circle(img, (dst[i][0],dst[i][1]), 5, (0,255,0), 3)
-    print(src)
-    print(dst)
-    print(xsize)
-    print(ysize)
-    M = cv2.getPerspectiveTransform(src, dst)
-    warped = cv2.warpPerspective(img, M, (xsize,ysize))                
-    cv2.imshow('frame', warped)

@@ -9,13 +9,7 @@ from utilities import *
 from sliding_windows import *
 from line import Line
 from path import Path
-#Here links for codes used to create this project
-
-#Camera calibration
-#http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html
-
-#Read/write opencv calibration matrix
-#https://stackoverflow.com/questions/44056880/how-to-read-write-a-matrix-from-a-persistent-xml-yaml-file-in-opencv-3-with-pyth
+from test import *
 
 def usage():
     print("Usage: pipeline.py video.mp4") 
@@ -23,13 +17,8 @@ def usage():
 def pipeline(img_orig, cam, path, debug = False):
 
     img_orig_undist = cam.undistort(img_orig)
-    #img = colorPipeline(img_orig_undist, debug = debug)
-    #img = refineImage(img_orig)
-    #img = colorTrash(img)
+
     img = img_orig_undist
-    #showScaled('yellow', img)
-    #return img_orig
-    #return img_orig_undist
     imshape = img.shape
     xsize = imshape[1]
     ysize = imshape[0]
@@ -55,10 +44,10 @@ def pipeline(img_orig, cam, path, debug = False):
                         [(right_top[0], right_top[1], right_bottom[0], right_bottom[1])],
                         [(right_bottom[0], right_bottom[1], left_bottom[0], left_bottom[1])]]
 
-    #if debug == True:
-    #    img2 = img_orig.copy()
-    #    draw_lines_orig(img2, region_lines, [255,0,0], 3)
-    #    showScaled('ROI', img2)
+    if debug == True:
+        img2 = img_orig.copy()
+        draw_lines_orig(img2, region_lines, [255,0,0], 3)
+        showScaled('ROI', img2, 0.5)
 
     src  = np.float32([
         [left_bottom[0], left_bottom[1]],
@@ -77,11 +66,8 @@ def pipeline(img_orig, cam, path, debug = False):
     h = left_bottom[1] - left_top[1]
     img = colorPipeline(img, debug = debug)
     
-    warped, M, Minv = warp(img, src, dst, (xsize,ysize), debug = False)
-    #img = cv2.resize(warped, (int(w/2), int(h/2)), cv2.INTER_CUBIC)
-    
-    #return img
-    #res = windows(warped, img_orig_undist, Minv)
+    warped, M, Minv = warp(img, src, dst, (xsize,ysize), debug = True)
+
     if path.size == None:
         path.setSize((warped.shape[1], warped.shape[0]))
         
@@ -92,22 +78,15 @@ def pipeline(img_orig, cam, path, debug = False):
         left_fitx, right_fitx, ploty, left_fit, right_fit = fitCurves(warped, left_lane_inds, right_lane_inds,  debug = debug)
         
     path.addFrameData(left_fitx, right_fitx, left_fit, right_fit, ploty)
-    
-    #if line.detected == True:
-    #    result = drawTargetLane(warped, img_orig_undist, left_fitx, right_fitx, ploty, Minv)
-    #else:
-    #    result = drawTargetLane(warped, img_orig_undist, line.best_left_x, line.best_right_x, ploty, Minv)
+
     result = drawTargetLane(warped, img_orig_undist, path.left_line.bestx, path.right_line.bestx, ploty, Minv)
     if path.hasConfidentData():
         path.drawInfo(result)
-    
-    #draw_lines_orig(result, region_lines, [255,0,0], 3)
-    
+
     if path.needReset():
         path.reset()
 
     return result
-    return img_orig_undist
 
 cam = Camera()
 if cam.calibrationFileExists() == False or cam.load() == False:
@@ -119,29 +98,20 @@ if cam.calibrationFileExists() == False or cam.load() == False:
 path= Path()
 
 videoMode = True
-debug = True
+debug = False
+
+#if debug == True:
+#    output_calibration(cam)
+
 #frameStart = 1048
 frameStart = 0
-oneFrame = False
+oneFrame = True
 if videoMode == False:
-    #warptest(cam)
-    #cv2.imshow('frame', img)
-
-    #Exit on esc
-    #if cv2.waitKey(0) == 27:
-    #    cv2.destroyAllWindows()
-    #sys.exit(0)
-    #img_orig = cv2.imread('test_images/straight_lines1.jpg')     
+    #img_orig = cv2.imread('test_images/straight_lines1.jpg')
+    #img_orig = cv2.imread('test_images/test6.jpg')
     img_orig  = getFrame(sys.argv[1], 547)
-    
-    
-    #img_orig = cv2.imread('test_images/test6.jpg')     
     img = pipeline(img_orig, cam, path, debug)
     showAndExit(img)
-    #Exit on esc
-    #if cv2.waitKey(0) == 27:
-    #    cv2.destroyAllWindows()
-
 else:
 
     if len(sys.argv) < 2:
@@ -165,13 +135,13 @@ else:
         if cv2.waitKey(25) == 27:
             break
 
-        #if oneFrame == True and cv2.waitKey(25) == ord('a'):
         ret, frame = cap.read()
         #frame = cv2.flip(frame, 0)
         if ret == True: 
             frame = pipeline(frame, cam, path, debug)
             #cv2.putText(frame, 'Frame: '+str(frameCnt), (20,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1, cv2.LINE_AA)
-            cv2.imshow('Frame',frame)
+            #cv2.imshow('Frame',frame)
+            showScaled('Output',frame)
         else: 
             break
         frameCnt+=1

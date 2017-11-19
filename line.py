@@ -27,15 +27,6 @@ class Line():
         #polynomial coefficients for the most recent fit
         self.current_fit = None
 
-        #radius of curvature of the line in some units
-        self.radius_of_curvature = None 
-
-        #distance in meters of vehicle center from the line
-        self.line_base_pos = None 
-
-        #difference in fit coefficients between last and new fits
-        self.diffs = np.array([0,0,0], dtype='float') 
-
         #x values for detected line pixels
         self.allx = None
 
@@ -80,7 +71,6 @@ class Line():
         if fit == None or len(fit) == 0:
             return False
         new_fitx = fit[0]*self.ally**2 + fit[1]*self.ally + fit[2]
-        #print(new_fitx.astype(np.uint32))
         new_fitx_corr = new_fitx.copy()
         
         # remove all values that outside of analysis window
@@ -88,14 +78,9 @@ class Line():
         new_fitx_corr[(new_fitx < 0) | (new_fitx >= self.size[0])|(self.allx < 0) | (self.allx >= self.size[0])] = 0
         curr_fit_x_corr = self.allx.copy()
         curr_fit_x_corr[(new_fitx < 0) | (new_fitx >= self.size[0])|(self.allx < 0) | (self.allx >= self.size[0])] = 0
-        
-        #print(curr_fit_x_corr.astype(np.uint32))
+
         diff = np.abs(curr_fit_x_corr - new_fitx_corr).astype(np.uint32)
-        #diff = [1,2,3,4,5,12,16,14]
-        #print(diff)
-        #print(diff)
-        #diff[mask0 | mask1] = 0
-        
+
         mean_diff = np.mean(diff)
         
         max_diff = np.amax(diff)
@@ -150,7 +135,6 @@ class Line():
         return False
 
     def addFrameData(self, fit_x, fit, ploty):
-        #self.detected = self.sanityCheck(fit_x, fit)
         self.detected = True
 
         self.lastSuccess = 0
@@ -166,10 +150,6 @@ class Line():
         self.ally = ploty
         self.allx = fit_x
 
-        if self.current_fit!=None:
-            self.diffs = self.current_fit - fit
-
-        #self.bestx = np.mean(self.recent_xfitted)
         self.bestx = np.average(self.recent_xfitted, axis=0)
 
         self.best_fit = np.average(self.recent_fitted, axis=0)

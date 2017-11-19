@@ -5,6 +5,12 @@ import os
 from moviepy.editor import VideoFileClip
 import matplotlib.pyplot as plt
 
+#Read/write opencv calibration matrix
+#https://stackoverflow.com/questions/44056880/how-to-read-write-a-matrix-from-a-persistent-xml-yaml-file-in-opencv-3-with-pyth
+
+#Camera calibration
+#http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html
+
 class Camera():
     def __init__(self):
         print("Camera init")
@@ -26,7 +32,7 @@ class Camera():
         for i in range(0,filesCount):
             filename = 'camera_cal/calibration'+str(i+1)+'.jpg'
             # Read calibration image
-            img = cv2.imread(filename)     
+            img = cv2.imread(filename)
 
             # Convert to grayscale
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -44,12 +50,7 @@ class Camera():
         if foundCount > 0:
             rms, self.mtx, self.dist, rvecs, tvecs = cv2.calibrateCamera(objectPoints, imagePoints, (w, h), None, None)
             print('Camera successfully calibrated')
-            #print(self.mtx)
-            #print(self.dist)
-        
             return True
-        
-        
         #vis = np.concatenate((img1, img2), axis=0)
         return False
      

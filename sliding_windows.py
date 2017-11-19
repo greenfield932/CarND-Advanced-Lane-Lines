@@ -2,36 +2,27 @@ import cv2
 import numpy as np
 import sys 
 import os
-from moviepy.editor import VideoFileClip
 import matplotlib.pyplot as plt
 from camera import Camera
 from utilities import *
 
-def slidingWindowsFindRawPixelsIndexes(binary_warped, proposal_start_pos = None, nwindows = 9, debug = False):
-
+def slidingWindowsFindRawPixelsIndexes(binary_warped, nwindows = 9, debug = False):
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
-    #histogram = np.sum(binary_warped[binary_warped.shape[0]//4:,:], axis=0)
-
+    
     # Create an output image to draw on and  visualize the result
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
 
-    if proposal_start_pos == None:
-        histogram = np.sum(binary_warped[binary_warped.shape[0]//6:,:], axis=0)
-        #plt.plot(histogram)
-        #plt.show()
+    histogram = np.sum(binary_warped[binary_warped.shape[0]//6:,:], axis=0)
+    #plt.plot(histogram)
+    #plt.show()
 
-        #showScaled('slidingWindowsFindRawPixelsIndexes', binary_warped, 0.5)
-        
-        # Find the peak of the left and right halves of the histogram
-        # These will be the starting point for the left and right lines
-        midpoint = np.int(histogram.shape[0]/2)
-        leftx_base = np.argmax(histogram[:midpoint])
-        rightx_base = np.argmax(histogram[midpoint:]) + midpoint
-    else:
-        leftx_base = int(proposal_start_pos[0])
-        rightx_base = int(proposal_start_pos[1])
-        
+    # Find the peak of the left and right halves of the histogram
+    # These will be the starting point for the left and right lines
+    midpoint = np.int(histogram.shape[0]/2)
+    leftx_base = np.argmax(histogram[:midpoint])
+    rightx_base = np.argmax(histogram[midpoint:]) + midpoint
+
     # Set height of windows
     window_height = np.int(binary_warped.shape[0]/nwindows)
     # Identify the x and y positions of all nonzero pixels in the image
@@ -88,14 +79,6 @@ def slidingWindowsFindRawPixelsIndexes(binary_warped, proposal_start_pos = None,
     righty = nonzeroy[right_lane_inds] 
 
     if debug == True:
-        if proposal_start_pos != None:
-            print('Proposal:' + str(leftx_base)+' '+str(out_img.shape[0]-5))
-
-            cv2.circle(out_img, (int(proposal_start_pos[0]), int(out_img.shape[0]-5)), 3, (255,255,0), 3)
-            cv2.circle(out_img, (int(proposal_start_pos[1]), int(out_img.shape[0]-5)), 3, (0,255,255), 3)
-        
-        #print(left_fitx[-1])
-        #print(ploty[-1])
         showScaled('Sliding windows', out_img, 0.5)
     return left_lane_inds, right_lane_inds
 
@@ -152,17 +135,7 @@ def fitCurves(binary_warped, left_lane_inds, right_lane_inds, debug = False):
         drawLine(result, left_fitx, ploty, (0,255,255))
         drawLine(result, right_fitx, ploty, (0,255,255))
         
-        #cv2.circle(result, (int(left_fitx[-1]), int(ploty[-1])), 3, (255,255,0), 2)
-        #print(left_fitx[-1])
-        #print(ploty[-1])
-        
         showScaled('Fitting curves', result, 0.5)
-        #plt.imshow(out_img)
-        #plt.plot(left_fitx, ploty, color='yellow')
-        #plt.plot(right_fitx, ploty, color='yellow')
-        #plt.xlim(0, 1280)
-        #plt.ylim(720, 0)
-        #plt.show()
 
     return left_fitx, right_fitx, ploty, left_fit, right_fit
 
@@ -209,9 +182,7 @@ def detectRawPixelsWithProposal(binary_warped, left_fit, right_fit, debug = Fals
     lefty = nonzeroy[left_lane_inds]
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds]
-   
 
-    #print(rightx)
     # Fit a second order polynomial to each
     left_fit = np.polyfit(lefty, leftx, 2)
     right_fit = np.polyfit(righty, rightx, 2)
@@ -223,9 +194,7 @@ def detectRawPixelsWithProposal(binary_warped, left_fit, right_fit, debug = Fals
 
     if debug == True:
         out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
-        #out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-        #out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
-        
+
         window_img = np.zeros_like(out_img)
         left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-margin, ploty]))])
         left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+margin, 
@@ -269,7 +238,6 @@ def calcCurvature(left_fitx, left_fit, right_fitx, right_fit, ploty):
     y_eval = np.max(ploty)
     left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
     right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
-    #print(left_curverad, right_curverad)
 
     left_fit_cr = np.polyfit(ploty*ym_per_pix, leftx*xm_per_pix, 2)
     right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
@@ -277,10 +245,6 @@ def calcCurvature(left_fitx, left_fit, right_fitx, right_fit, ploty):
     # Calculate the new radii of curvature
     left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
     right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
-    
-    # Now our radius of curvature is in meters
-    #print(left_curverad, 'm', right_curverad, 'm')
-    # Example values: 632.1 m    626.2 m
 
     return left_curverad, right_curverad
 
@@ -300,10 +264,7 @@ def drawTargetLane(binary_warped, img_orig_undist, left_fitx, right_fitx, ploty,
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
     newwarp = cv2.warpPerspective(color_warp, Minv, (img_orig_undist.shape[1], img_orig_undist.shape[0])) 
-    #showScaled('unwarp', newwarp)
+
     # Combine the result with the original image
     result = cv2.addWeighted(img_orig_undist, 1, newwarp, 0.3, 0)
-    #plt.imshow(result)
-    #plt.show()
-    #showAndExit(result)
     return result
