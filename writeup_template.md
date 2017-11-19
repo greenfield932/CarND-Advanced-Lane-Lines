@@ -165,4 +165,4 @@ One of the problems I faced were false positives on stright lines on the road (a
 Next problem on hard_challenge video appears due to inability to use fixed region of interest. I believe adaptive region of interest adjusted by curvature calculated from lines can be used here.
 
 Also I faced a problem with very sunny places where impossible to determine road lines, in addition turns on the road at the same time makes averaging algorithm fail, since it should change very fast according to the road turns, but at the same time it can't get new frames due to sun shines.
-I believe preprocessing the same color image several times with different treshold with back feedback from analysis algorithm can make pipeline more robust.
+I believe preprocessing the same color image several times with different treshold with feedback from analysis algorithm can make pipeline more robust.
