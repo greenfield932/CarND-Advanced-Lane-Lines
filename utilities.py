@@ -141,7 +141,7 @@ def warp(img, src, dst, size, debug = False):
     #    showScaled('Bird eye view', warped, 0.5)
     return warped, M, Minv
 
-def showScaled(name, img, scale = None, save = True):
+def showScaled(name, img, scale = None, save = False):
     cv2.namedWindow(name, cv2.WINDOW_NORMAL)
     cv2.imshow(name, img)
     if scale!=None:

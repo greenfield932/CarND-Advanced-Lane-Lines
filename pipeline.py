@@ -12,7 +12,7 @@ from path import Path
 from test import *
 
 def usage():
-    print("Usage: pipeline.py video.mp4") 
+    print("Usage: pipeline.py video.mp4 [output_video.mp4]") 
 
 def pipeline(img_orig, cam, path, debug = False):
 
@@ -102,10 +102,9 @@ debug = False
 
 #if debug == True:
 #    output_calibration(cam)
-
 #frameStart = 1048
 frameStart = 0
-oneFrame = True
+oneFrame = False
 if videoMode == False:
     #img_orig = cv2.imread('test_images/straight_lines1.jpg')
     #img_orig = cv2.imread('test_images/test6.jpg')
@@ -118,12 +117,17 @@ else:
         usage()
         sys.exit(1)
 
+    videoWriter = None
+
     videoFileName = sys.argv[1]
     cap = cv2.VideoCapture(videoFileName)
-
+    
     if cap.isOpened() == False:
+    
         print("Error opening video file:" + videoFileName)
         sys.exit(2)
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
 
     frameCnt = 0
 
@@ -138,10 +142,18 @@ else:
         ret, frame = cap.read()
         #frame = cv2.flip(frame, 0)
         if ret == True: 
+            
+            if videoWriter == None and len(sys.argv) >= 3:
+                fourcc = cv2.VideoWriter_fourcc('H', '2', '6', '4')
+                videoWriter = cv2.VideoWriter(sys.argv[2], fourcc, fps,(frame.shape[1], frame.shape[0]),True)
+
+            
             frame = pipeline(frame, cam, path, debug)
             #cv2.putText(frame, 'Frame: '+str(frameCnt), (20,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1, cv2.LINE_AA)
             #cv2.imshow('Frame',frame)
             showScaled('Output',frame)
+            if videoWriter!=None:
+                videoWriter.write(frame)
         else: 
             break
         frameCnt+=1
@@ -152,6 +164,7 @@ else:
             elif cv2.waitKey(0) == 27:
                 break
         
-
+    if videoWriter!=None:
+        videoWriter.release()
     cap.release() 
     cv2.destroyAllWindows()
