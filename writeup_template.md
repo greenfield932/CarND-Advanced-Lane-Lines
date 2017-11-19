@@ -15,9 +15,9 @@ The goals / steps of this project are the following:
 
 [image1]: ./examples/original.jpg
 [image2]: ./examples/undistorted.jpg
-[image3]: ./examples/Color_pipe_line_#0.jpg
-[image4]: ./examples/Color_pipe_line_#1.jpg
-[image5]: ./examples/Color_pipe_line_#2.jpg
+[image3]: ./examples/Color_pipe_line_0.jpg
+[image4]: ./examples/Color_pipe_line_1.jpg
+[image5]: ./examples/Color_pipe_line_2.jpg
 [image6]: ./examples/ROI.jpg
 [image7]: ./examples/Bird_eye_view1.jpg
 [image8]: ./examples/histogram.png
