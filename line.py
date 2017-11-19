@@ -34,7 +34,7 @@ class Line():
         #y values for detected line pixels
         self.ally = None
 
-        self.framesAveraging = 10
+        self.framesAveraging = 5 #set to 5 for project vide,  20 for challenge_video  and 2 for harder_challenge video
         self.lastSuccess = 0
         
         self.size = None

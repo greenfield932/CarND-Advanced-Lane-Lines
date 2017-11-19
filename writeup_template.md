@@ -154,12 +154,16 @@ Here's a [link to my video result](./examples/output_project_video.avi)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-The pipeline is quite stable on project video, but fails on challenge and hard_challenge videos.
+The pipeline is quite stable on project video, but sometimes fails on challenge  [link to challenge video result](./examples/out_challenge_video.avi) and harder_challenge videos  [link to harder video result](./examples/out_harder_challenge_video.avi).
 
-One of the problems I faced were false positives on stright lines on the road (a joint of a road coverages) appear in gradient filter very actively, as result some of them can be interpreted as lane line. This problem can be fixed by using other color treshold methods based on white/yellow color extraction instead of gradient filter, or their combination in 'AND' manner (instead of 'OR
-). 
+One of the problems I faced were false positives on stright lines on the road (a joint of a road coverages) appear in gradient filter very actively, as result some of them can be interpreted as lane line. This problem was fixed by using other color treshold methods based on white/yellow color extraction with gradient filter combination in 'AND' manner (instead of 'OR
+). I tried this approach on challenge_video and got much better results than using saturation channel treshold and luminosity gradient approach.
 
-Next problem on hard_challenge video appears due to inability to use fixed region of interest. I believe adaptive region of interest adjusted by curvature calculated from lines can be used here.
+Despite overall robust results on challenge_video there is still an issue under the bridge caused by poor lighting. As result pipeline produces wrong lines and draws only averaged lines from previous good frames until the buffer became empty. Averaging 
+frames provided some robustness for the algorithm as well as latency in following turns. This problem appears on hard_challenge vide since it has a lot of turns with poor and too shine light areas.
 
-Also I faced a problem with very sunny places where impossible to determine road lines, in addition turns on the road at the same time makes averaging algorithm fail, since it should change very fast according to the road turns, but at the same time it can't get new frames due to sun shines.
-I believe preprocessing the same color image several times with different treshold with feedback from analysis algorithm can make pipeline more robust.
+Next problem on hard_challenge video appears due to inability to use fixed region of interest. I believe adaptive region of interest adjusted by line shift calculated from lines can be used here.
+
+Also I faced a problem with very sunny places where impossible to determine road lines. I believe preprocessing the same color image several times with different tresholds and feedback from analysis algorithm can make pipeline more robust. Preprocessing can be done in parallel and resulted position can be choosen from the best result.
+
+Also camera should have black wrapper from non-blinking material covered around and mounted directly to the front glass to prevent blinks from car front panel on bright light, like it done in automotive industry with front cameras.

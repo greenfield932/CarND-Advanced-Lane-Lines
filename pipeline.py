@@ -25,16 +25,16 @@ def pipeline(img_orig, cam, path, debug = False):
     xsize = imshape[1]
     ysize = imshape[0]
     
-    #Set region of interest
+    #Set region of interest for project_video
     left_bottom = (130, ysize-50)
     left_top = (550, 470)
     right_top = (760, 470)
     right_bottom = (1180, ysize-50)
-
-    #left_bottom = (140, ysize-50)
-    #left_top = (350, 570)
-    #right_top = (900, 570)
-    #right_bottom = (1080, ysize-50)
+    #Set region of interest for challenge and harder_challenge video
+    #left_bottom = (140, ysize-50) #left_bottom = (140, ysize-50)
+    #left_top = (350, 500) #left_top = (350, 570)
+    #right_top = (900, 500) #right_top = (900, 570)
+    #right_bottom = (1080, ysize-50) #right_bottom = (1080, ysize-50)
 
     #basler
     #left_bottom = (80, ysize-400)

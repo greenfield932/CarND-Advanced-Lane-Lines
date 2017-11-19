@@ -64,7 +64,7 @@ def colorTreshold(img):
     mask_white = cv2.inRange(img, lower_white, upper_white)
 
     img = cv2.bitwise_and(img, img, mask = mask_yellow | mask_white)
-    showScaled('color trash', img, 0.5)
+    #showScaled('color trash', img, 0.5)
 
     mask_res = np.zeros_like(mask_white)
     mask = mask_yellow | mask_white
@@ -79,11 +79,11 @@ def equalize(img):
     return img
 
 #main color pipeline
-def colorPipeline(img, s_thresh=(50, 250), sx_thresh=(30, 100), debug = False):
+def colorPipeline(img, s_thresh=(50, 250), sx_thresh=(5, 200), debug = False):
     #img = np.copy(img)
 
-    #imgEqualized = refineImage(img)
-    #colorMask = colorTreshold(imgEqualized)
+    imgEqualized = refineImage(img)
+    colorMask = colorTreshold(imgEqualized)
     # Convert to HLS color space and separate the V channel
     
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
@@ -104,8 +104,8 @@ def colorPipeline(img, s_thresh=(50, 250), sx_thresh=(30, 100), debug = False):
     s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
     
     combined_binary = np.zeros_like(sxbinary)
-    combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
-    #combined_binary[(colorMask == 1) & (sxbinary == 1)] = 1
+    #combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
+    combined_binary[(colorMask == 1) & (sxbinary == 1)] = 1
     
     #trashMask = colorTreshold(img)
     #combined_binary[(sxbinary == 1) | (trashMask == 1)] = 255
