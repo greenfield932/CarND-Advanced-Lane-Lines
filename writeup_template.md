@@ -168,7 +168,7 @@ One of the problems I faced were false positives on stright lines on the road (a
 
 Despite overall robust results on challenge_video there is still an issue under the bridge caused by poor lighting. As result pipeline produces wrong lines and draws only averaged lines from previous good frames until the buffer became empty. Averaging 
 frames provided some robustness for the algorithm as well as latency in following turns. This problem appears on hard_challenge video since it has a lot of turns with poor and too shine light areas with fast turns. To get better results I have to decrease
-averaging rate for hard_challenge video. I believe it can be used as some heruistic adjusted automatically.
+averaging rate for hard_challenge video. I believe it can be used as some heuristic adjusted automatically.
 
 Next problem on hard_challenge video appears due to inability to use fixed region of interest. I believe adaptive region of interest adjusted by line shift calculated from lines can be used here.
 
