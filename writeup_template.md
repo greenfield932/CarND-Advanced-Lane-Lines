@@ -114,15 +114,34 @@ Then I did some other stuff and fit my lane lines with a 2nd order polynomial ki
 
 ![alt text][image5]
 
+The code for this procedure is located at the function `slidingWindowsFindRawPixelsIndexes()` at lines #9 - #83 and function `fitCurves()` #94 - #140 of `sliding_windows.py`.
+
+The code mostly kept as is provided by Udacity. The algorithm is based one the following steps:
+
+## 1. Find peaks on the bottom of the image to detect start of lane lines
+
+![alt text][image8]
+
+## 2. Based on peaks start search for pixels by sliding windows stacked from bottom to top along the white pixels
+
+![alt text][image9]
+
+## 3. Fit polynomial on the detected points to represent line as 3-coefficient parameters array for equation.
+
+![alt text][image10]
+
+
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+I did this in lines #229 - #249 in my code in `sliding_windows.py` using the equations and reference code provided by Udacity. The main idea is based on mathematical equations and conversion from pixel coordinates to world (meters) coordinate using predefined translation coefficient.
+
+Position of the vehicle is calculated at #38-#46 `path.py` based on an assumption that vehicle center fit middle point of the lines when car is located at the center. To find a shift I used start points of the found lines to calculate a middle point coordinate X, then substracted from X center of the image (width/2) and resulted value multiplied by translation coefficient from pixels to meters.
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+I implemented this step in lines #251 through #270 in my code in `sliding_windows.py` in the function `drawTargetLane()`.  Here is an example of my result on a test image:
 
-![alt text][image6]
+![alt text][image11]
 
 ---
 
@@ -130,7 +149,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./output_project_video.mp4)
 
 ---
 
@@ -138,4 +157,12 @@ Here's a [link to my video result](./project_video.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Pipiline is quite stable on project video, but fails on challenge and hard_challenge videos.
+
+One of the problems I faced were false positives on stright lines on the road (a joint of a road coverages) appear in gradient filter very actively, as result some of them can be interpreted as lane line. This problem can be fixed by using other color treshold methods based on white/yellow color extraction instead of gradient filter, or their combination in 'AND' manner (instead of 'OR
+)
+
+Next problem on hard_challenge video appears due to inability to use fixed region of interest. I believe adaptive region of interest adjusted by curvature calculated from lines can be used here.
+
+Also I faced a problem with very sunny places where impossible to determine road lines, in addition turns on the road at the same time makes averaging algorithm fail, since it should change very fast according to the road turns, but at the same time it can't get new frames due to sun shines.
+
