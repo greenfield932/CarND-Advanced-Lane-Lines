@@ -66,7 +66,10 @@ The resulted undistorted image provided below:
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines #89 through #124 in `utilities.py`).  Here's an example of output for this step (red color data obtained from color treshold and green color - data obtained from gradient tresholds).
+I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines #82 through #124 in `utilities.py`).  Here's an example of output for this step (red color data obtained from color treshold and green color - data obtained from gradient tresholds).
+
+I tried luminosty gradient from HLS color space with OR combination of saturation channel with tresholds. But best results were achieved with white/yellow HSV/RGB color treshold and HLS luminosity gradient
+combined with color mask by AND condition.
 
 ![alt text][image4]
 
