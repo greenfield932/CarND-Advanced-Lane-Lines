@@ -90,8 +90,9 @@ def equalize(img):
     img = exposure.equalize_adapthist(img)
     return img
 
-def colorPipeline(img, s_thresh=(100, 250), sx_thresh=(20, 100), debug = False):
+def colorPipeline(img, s_thresh=(50, 250), sx_thresh=(30, 100), debug = False):
     img = np.copy(img)
+    
     #imgEqualized = refineImage(img)
     #colorMask = colorTrash(imgEqualized)
     # Convert to HLS color space and separate the V channel
@@ -127,12 +128,12 @@ def colorPipeline(img, s_thresh=(100, 250), sx_thresh=(20, 100), debug = False):
     #img = refineImage(warped)
     #img = colorTrash(img)
 
-    #if debug == True:
+    if debug == True:
         # Stack each channel
         # Note color_binary[:, :, 0] is all 0s, effectively an all black image. It might
         # be beneficial to replace this channel with something else.
         #color_binary = np.dstack(( np.zeros_like(sxbinary), sxbinary, colorMask)) * 255
-        #color_binary = np.dstack(( np.zeros_like(sxbinary), np.zeros_like(sxbinary), s_binary))* 255
+        color_binary = np.dstack(( np.zeros_like(sxbinary), sxbinary, s_binary))* 255
         #color_binary1 = np.dstack(( np.zeros_like(sxbinary), np.zeros_like(sxbinary), h_channel))/255
         #color_binary2 = np.dstack(( np.zeros_like(sxbinary), np.zeros_like(sxbinary), s_channel))/255
         #color_binary3 = np.dstack(( np.zeros_like(sxbinary), np.zeros_like(sxbinary), v_channel))/255
@@ -142,7 +143,7 @@ def colorPipeline(img, s_thresh=(100, 250), sx_thresh=(20, 100), debug = False):
         #
         #print(color_binary)
         #showScaled('Color pipe line #0', img, 0.5)
-        #showScaled('Color pipe line #1', color_binary, 0.5)
+        showScaled('Color pipe line #1', color_binary, 0.5)
         #showScaled('Color pipe line #2', combined_binary*255, 0.5)
 
     return combined_binary
