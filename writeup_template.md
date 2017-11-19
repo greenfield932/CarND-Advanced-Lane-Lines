@@ -160,9 +160,9 @@ Here's a [link to my video result](./examples/output_project_video.avi)
 The pipeline is quite stable on project video, but fails on challenge and hard_challenge videos.
 
 One of the problems I faced were false positives on stright lines on the road (a joint of a road coverages) appear in gradient filter very actively, as result some of them can be interpreted as lane line. This problem can be fixed by using other color treshold methods based on white/yellow color extraction instead of gradient filter, or their combination in 'AND' manner (instead of 'OR
-)
+). 
 
 Next problem on hard_challenge video appears due to inability to use fixed region of interest. I believe adaptive region of interest adjusted by curvature calculated from lines can be used here.
 
 Also I faced a problem with very sunny places where impossible to determine road lines, in addition turns on the road at the same time makes averaging algorithm fail, since it should change very fast according to the road turns, but at the same time it can't get new frames due to sun shines.
-
+I believe preprocessing the same color image several times with different treshold with back feedback from analysis algorithm can make pipeline more robust.
